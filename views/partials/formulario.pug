@@ -1,0 +1,20 @@
+h2( style="text-align: center;") Ingrese Producto
+
+    div( class="container mt-3")
+        form(action="/api/productos" method="post")
+            div(class="form-group")
+                label(for="nombre" class="form-label") Nombre
+                input(type="text" id="nombre" name="nombre" class="form-control" placeholder="Ingrese nombre")
+            .form-group
+                label(for="precio" class="form-label") Precio
+                input#precio.form-control(type="text" name="precio" placeholder="precio de producto")
+            .form-group
+                label(for="img" class="form-label") Imagen
+                input#img.form-control(type="text" name="imagen" placeholder="url img")
+
+            button(class="btn btn-success") Agregar
+
+
+
+
+    
