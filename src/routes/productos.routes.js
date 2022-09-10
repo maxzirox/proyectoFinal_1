@@ -1,14 +1,22 @@
 const express = require('express');
 const routerProductos = express.Router();
+const Contenedor = require('../../public/desafio-async-json');
 
-const DB_PRODUCTOS = [
-    {
-        id: 1,
-        nombre: 'Quix',
-        precio: 1000,
-        url: 'https://santaisabel.vtexassets.com/arquivos/ids/162927/Lavaloza-concentrado-limon-750-ml.jpg?v=637479988970600000'
+const contenedor = new Contenedor('./data.json');
+
+const DB_PRODUCTOS = [];
+
+const dbConection = () => {
+    const products = contenedor.getAll();
+    products
+    .then((all) =>{ 
+        const prods = all
+        DB_PRODUCTOS.push(prods)
+        
     }
-];
+        );
+}
+dbConection();
 routerProductos.post('/', (req, res) =>{
     const data = req.body;
     console.log('obj', {data});
@@ -56,7 +64,27 @@ routerProductos.put('/:id', (req, res) =>{
     }
 });
 
+routerProductos.delete('/:id', (req, res) =>{
+    const id = req.params.id;
+    const indexObj = DB_PRODUCTOS.findIndex((o) => o.id == id);
+    //const newObj = DB_PRODUCTOS.filter((item) => item.id !== id);
+        
+    try{
+        if(indexObj == -1){
+            res.status(404).json({code: 404, msg: `Producto ${id} no ecnontrado`});
+        }
+        DB_PRODUCTOS.splice(indexObj, 1);
+        res.status(200).json(DB_PRODUCTOS);
+    } catch(error){
+        console.log(error);
+        res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
+    }
+        
+});
+
 routerProductos.get('/', (req, res) =>{
+    dbConection;
+    console.log('productosDB: ', DB_PRODUCTOS)
     //res.render('vista', {DB_PRODUCTOS});
     res.status(200).json(DB_PRODUCTOS);
 });

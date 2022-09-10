@@ -46,17 +46,19 @@ routerCarrito.get('/:id/productos', (req, res) =>{
 
 routerCarrito.post('/:id/productos', (req, res) =>{
     const id = req.params.id;
-    const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
+        const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
     const data = req.body;
     console.log('obj', {data});
     let newId;
-        if(DB_CARRITO[indexObj].length == 0){
-            newId = 1;
-        } else{
-            newId =DB_CARRITO[DB_CARRITO[indexObj].length - 1].id + 1;
+        if(DB_CARRITO[indexObj].productos.length == 0){
+          newId = 1;
+         } else{
+
+            newId = DB_CARRITO[indexObj].productos.length + 1
+            //newId =DB_CARRITO[DB_CARRITO.length - 1].id + 1;
         }
 
-        DB_CARRITO.productos.push({id: newId, ...req.body});
+        DB_CARRITO[indexObj].productos.push({id: newId, ...req.body});
     res.status(201).json({code: 201, msg: ` Carrito ${newId} agregado con exito`});
 });
 
@@ -76,6 +78,47 @@ routerCarrito.put('/:id', (req, res) =>{
         res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
     }
 });
+
+routerCarrito.delete('/:id', (req, res) =>{
+    const id = req.params.id;
+    const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
+    //const newObj = DB_PRODUCTOS.filter((item) => item.id !== id);
+        
+    try{
+        if(indexObj == -1){
+            res.status(404).json({code: 404, msg: `Producto ${id} no ecnontrado`});
+        }
+        DB_CARRITO.splice(indexObj, 1);
+        res.status(200).json(DB_CARRITO);
+    } catch(error){
+        console.log(error);
+        res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
+    }
+        
+});
+
+routerCarrito.delete('/:id/productos/:idProd', (req, res) =>{
+    const id = req.params.id;
+    const idProd = req.params.idProd;
+    const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
+    const indexProd = DB_CARRITO[indexObj].productos.findIndex((producto) => producto.id == idProd);
+    //const newObj = DB_PRODUCTOS.filter((item) => item.id !== id);
+        
+    try{
+        if(indexObj == -1 || indexProd == -1){
+            res.status(404).json({code: 404, msg: `carrito ${id} no ecnontrado`});
+        }
+        DB_CARRITO[indexObj].productos.splice(indexProd, 1)
+        //DB_CARRITO.splice(indexObj, 1);
+        res.status(200).json(DB_CARRITO);
+    } catch(error){
+        console.log(error);
+        res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
+    }
+        
+});
+
+
 
 routerCarrito.get('/', (req, res) =>{
     //res.render('vista', {DB_PRODUCTOS});
