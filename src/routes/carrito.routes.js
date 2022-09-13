@@ -1,5 +1,9 @@
 const express = require('express');
+const Contenedor = require('../../public/desafio-async-json');
 const routerCarrito = express.Router();
+
+const cart = new Contenedor('./carrito.json');
+const products = new Contenedor('./data.json');
 
 const DB_CARRITO = [
     {
@@ -17,27 +21,23 @@ const DB_CARRITO = [
 routerCarrito.post('/', (req, res) =>{
     const data = req.body;
     console.log('obj', {data});
-    let newId;
-        if(DB_CARRITO.length == 0){
-            newId = 1;
-        } else{
-            newId =DB_CARRITO[DB_CARRITO.length - 1].id + 1;
-        }
-
-        DB_CARRITO.push({id: newId, ...req.body});
-    res.status(201).json({code: 201, msg: ` Carrito ${newId} agregado con exito`});
+    try {
+        cart.save(data);
+        res.status(201).json({code: 201, msg: ` Carrito agregado con exito`});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
+    }
+    
 });
 
 
 routerCarrito.get('/:id/productos', (req, res) =>{
     try{
         const id = req.params.id;
-        const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
+        const cartId = cart.getById(id)
 
-        if(indexObj == -1){
-            res.status(404).json({code: 404, msg: `Carrito ${id} no ecnontrado`});
-        }
-        res.status(200).json(DB_CARRITO[indexObj].productos);
+        res.status(200).json(cartId.productos);
     } catch(error){
         console.log(error);
         res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
