@@ -8,7 +8,6 @@ const products = new Contenedor('./data.json');
 
 routerCarrito.post('/', async (req, res) =>{
     const data = req.body;
-    console.log('obj', {data});
     try {
         await cart.save(data);
         res.status(201).json({code: 201, msg: ` Carrito agregado con exito`});

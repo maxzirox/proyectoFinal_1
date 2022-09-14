@@ -1,16 +1,24 @@
 const express = require('express');
 const routerProductos = express.Router();
 const Contenedor = require('../../public/desafio-async-json');
+const config = require('../utils/config');
 
 const contenedor = new Contenedor('./data.json');
 
+const isAdmin = config.isAdmin;
+function onlyAdmins(req, res, next){
+    if (!isAdmin) {
+        res.status(403).json({code: 403, msg: `Forbbiden acces ${req.method} ${req.url}`});
+    } else {
+        next();
+    }
+}
 
-
-routerProductos.post('/', async (req, res) =>{
+routerProductos.post('/', onlyAdmins, async (req, res) =>{
     const data = req.body;
     try {
         await contenedor.save(data);
-        res.status(201).json({code: 201, msg: `Producto ${data.nombre} agregado con exito`});
+        res.status(201).json({code: 201, msg: ` producto agregado con exito`});
     } catch (error) {
         console.log(error);
         res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
@@ -34,7 +42,7 @@ routerProductos.get('/:id', async (req, res) =>{
     }
 });
 
-routerProductos.put('/:id', async (req, res) =>{
+routerProductos.put('/:id', onlyAdmins, async (req, res) =>{
         const data = req.body;
         const id = req.params.id;
     try{
@@ -46,11 +54,11 @@ routerProductos.put('/:id', async (req, res) =>{
     }
 });
 
-routerProductos.delete('/:id', async (req, res) =>{
+routerProductos.delete('/:id', onlyAdmins, async (req, res) =>{
     const id = req.params.id;
         
     try{
-        const products = await contenedor.deleteById(id);
+        await contenedor.deleteById(id);
         res.status(200).json({code: 200, msg: `prducto ${id} eliminado con exito`});
     } catch(error){
         console.log(error);
