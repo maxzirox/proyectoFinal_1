@@ -20,7 +20,7 @@ class Contenedor{
         const objs = await this.getAll();
         try{
             const indexObj = objs.findIndex((obj) => obj.id == id);
-            if(indexProduct == -1){
+            if(indexObj == -1){
                 console.log('producto no encontrado')
             }
             objs[indexObj] = {id: id, ...obj};
@@ -42,7 +42,7 @@ class Contenedor{
         }
 
         const newProduct = {id: newId, ...obj};
-        objs.push(newProduct);
+        objs.push(... newProduct);
 
         try{
             await fs.writeFile(this.ruta, JSON.stringify(objs, null, 2));
@@ -57,12 +57,10 @@ class Contenedor{
         const objs = await this.getAll();
 
         try {
-            objs.filter((obj) => { 
-                if(obj.id == id){
-                    console.log(obj)
-                    return obj;
-                }
-            })
+            const findObj = objs.filter((obj) => (obj.id == id))
+             return findObj;
+                
+            
         } catch (error) {
             console.log('error: ', error);
         }
@@ -74,6 +72,9 @@ class Contenedor{
         let indexObj = objs.findIndex((item) => item.id == id);
         
         try{
+            if(indexObj == -1){
+                console.log('producto no encontrado')
+            }
             objs.splice(indexObj, 1);
             await fs.writeFile(this.ruta, JSON.stringify(objs, null, 2));
             return objs;

@@ -5,24 +5,12 @@ const routerCarrito = express.Router();
 const cart = new Contenedor('./carrito.json');
 const products = new Contenedor('./data.json');
 
-const DB_CARRITO = [
-    {
-        id: 1,
-        timestamp: Date.now(),
-        productos: [{
-            id: 1,
-            nombre: 'Quix',
-            precio: 1000,
-            url: 'https://santaisabel.vtexassets.com/arquivos/ids/162927/Lavaloza-concentrado-limon-750-ml.jpg?v=637479988970600000'
-        }
-    ]
-    }
-];
-routerCarrito.post('/', (req, res) =>{
+
+routerCarrito.post('/', async (req, res) =>{
     const data = req.body;
     console.log('obj', {data});
     try {
-        cart.save(data);
+        await cart.save(data);
         res.status(201).json({code: 201, msg: ` Carrito agregado con exito`});
     } catch (error) {
         console.log(error);
@@ -32,64 +20,37 @@ routerCarrito.post('/', (req, res) =>{
 });
 
 
-routerCarrito.get('/:id/productos', (req, res) =>{
+routerCarrito.get('/:id/productos', async (req, res) =>{
     try{
         const id = req.params.id;
-        const cartId = cart.getById(id)
-
-        res.status(200).json(cartId.productos);
+        const cartId = await cart.getById(id);
+        console.log('carrito: ',cartId[0].productos);
+        res.status(200).json(cartId[0].productos);
+        
     } catch(error){
         console.log(error);
         res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
     }
 });
 
-routerCarrito.post('/:id/productos', (req, res) =>{
-    const id = req.params.id;
-        const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
-    const data = req.body;
-    console.log('obj', {data});
-    let newId;
-        if(DB_CARRITO[indexObj].productos.length == 0){
-          newId = 1;
-         } else{
+routerCarrito.post('/:id/productos', async (req, res) =>{
+    const idProduct = req.body.id;
+    const idCart = req.params.id;
+        const product = await products.getById(idProduct);
+        const cartObj = await cart.getById(idCart);
+        const indexCart = cartObj.findIndex((cart) => cart.id == idCart);
+        cartObj[indexCart].productos.push(... product);
+        await cart.update(idCart, cartObj[indexCart]);
+        res.end();
 
-            newId = DB_CARRITO[indexObj].productos.length + 1
-            //newId =DB_CARRITO[DB_CARRITO.length - 1].id + 1;
-        }
-
-        DB_CARRITO[indexObj].productos.push({id: newId, ...req.body});
-    res.status(201).json({code: 201, msg: ` Carrito ${newId} agregado con exito`});
 });
 
-routerCarrito.put('/:id', (req, res) =>{
-        const data = req.body;
+
+routerCarrito.delete('/:id', async (req, res) =>{
+    const id = req.params.id;   
     try{
-        const id = req.params.id;
-        const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
-        if(indexObj == -1){
-            res.status(404).json({code: 404, msg: `Carrito ${id} no ecnontrado`});
-        }
-        res.status(200).json(DB_CARRITO[indexObj]);
-        DB_CARRITO.push({id: id, ...req.body});
-        res.status(201).json({code: 201, msg: `Carrito ${data.nombre} agregado con exito`});
-    } catch(error){
-        console.log(error);
-        res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
-    }
-});
-
-routerCarrito.delete('/:id', (req, res) =>{
-    const id = req.params.id;
-    const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
-    //const newObj = DB_PRODUCTOS.filter((item) => item.id !== id);
-        
-    try{
-        if(indexObj == -1){
-            res.status(404).json({code: 404, msg: `Producto ${id} no ecnontrado`});
-        }
-        DB_CARRITO.splice(indexObj, 1);
-        res.status(200).json(DB_CARRITO);
+        await cart.deleteById(id);
+        res.status(200).json({code: 200, msg: `carrito ${id} eliminado con exito`});
     } catch(error){
         console.log(error);
         res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
@@ -97,32 +58,24 @@ routerCarrito.delete('/:id', (req, res) =>{
         
 });
 
-routerCarrito.delete('/:id/productos/:idProd', (req, res) =>{
-    const id = req.params.id;
-    const idProd = req.params.idProd;
-    const indexObj = DB_CARRITO.findIndex((o) => o.id == id);
-    const indexProd = DB_CARRITO[indexObj].productos.findIndex((producto) => producto.id == idProd);
-    //const newObj = DB_PRODUCTOS.filter((item) => item.id !== id);
-        
-    try{
-        if(indexObj == -1 || indexProd == -1){
-            res.status(404).json({code: 404, msg: `carrito ${id} no ecnontrado`});
+routerCarrito.delete('/:id/productos/:idProd', async (req, res) =>{
+    const idProduct = req.params.idProd;
+    const idCart = req.params.id;
+        try {
+            const cartObj = await cart.getById(idCart);
+            const indexCart = cartObj.findIndex((cart) => cart.id == idCart);
+            const indexProd = cartObj[indexCart].productos.findIndex((product) => product.id == idProduct);
+            cartObj[indexCart].productos.splice(indexProd, 1);
+            await cart.update(idCart, cartObj[indexCart]);
+            res.end();
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
         }
-        DB_CARRITO[indexObj].productos.splice(indexProd, 1)
-        //DB_CARRITO.splice(indexObj, 1);
-        res.status(200).json(DB_CARRITO);
-    } catch(error){
-        console.log(error);
-        res.status(500).json({code: 500, msg: `error al obtener ${req.method} ${req.url}`});
-    }
+
         
 });
 
 
-
-routerCarrito.get('/', (req, res) =>{
-    //res.render('vista', {DB_PRODUCTOS});
-    res.status(200).json(DB_CARRITO);
-});
 
 module.exports = routerCarrito;

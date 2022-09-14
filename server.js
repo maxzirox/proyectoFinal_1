@@ -14,11 +14,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 //middleware para recibir parametros desde un formulario
 app.use(express.urlencoded({ extended: true}));
-//middleware para visualizar un index.html dentro de public
-// app.use(express.static(__dirname + '/public'))
 
-// app.set('views', './views');
-// app.set('view engine', 'pug');
 
 app.use('/api/productos', routerProductos);
 app.use('/api/carrito', routerCarrito);
